@@ -1,0 +1,50 @@
+[project]
+name = "jp-natural-voice-app"
+version = "0.1.0"
+description = "Japanese natural voice app using Style-Bert-VITS2 (JP-Extra)"
+authors = [
+    { name = "Your Name", email = "your.email@example.com" },
+]
+dependencies = [
+    "torch>=2.0.0",
+    "torchaudio>=2.0.0",
+    "numpy",
+    "scipy",
+    "librosa",
+    "soundfile",
+    "pydub",
+    "transformers>=4.30.0",
+    "accelerate",
+    "omegaconf",
+    "pyyaml",
+    "jaconv",
+    "unidic-lite",
+    "fugashi",
+    "japanese-numbers-python",
+    "jiwer",
+    "tqdm",
+    "requests",
+    "aiohttp",
+    "fastapi",
+    "uvicorn[standard]",
+    "pydantic",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "isort",
+    "flake8",
+    "mypy",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["jp_natural_voice_app"]
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
