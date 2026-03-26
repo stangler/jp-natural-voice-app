@@ -1,98 +1,118 @@
 #!/usr/bin/env python3
-"""
-jp-natural-voice-app: Style-Bert-VITS2 (JP-Extra) を使った日本語音声合成アプリ
-"""
+# -*- coding: utf-8 -*-
 
 import os
 import sys
-import torch
-import torchaudio
-import numpy as np
 from pathlib import Path
-from omegaconf import OmegaConf
-import yaml
 
-# モデルパス（環境変数や設定ファイルから読み込む想定）
-MODEL_DIR = Path(os.getenv("MODEL_DIR", "/workspace/models/style-bert-vits2-jp-extra"))
-CONFIG_PATH = MODEL_DIR / "config.yml"
-MODEL_PATH = MODEL_DIR / "model.pth"
+import torch
+import numpy as np
+from style_bert_vits2.nlp import bert_models
+from style_bert_vits2.utils.stdout_wrapper import SAFE_STDOUT
 
-def load_model(config_path: Path, model_path: Path, device: str = "cuda"):
-    """
-    Style-Bert-VITS2 のモデルと設定を読み込む（簡易版）
-    実際には公式リポジトリの load_model 関数を参考に実装してください。
-    """
-    if not config_path.exists():
-        raise FileNotFoundError(f"Config file not found: {config_path}")
-    if not model_path.exists():
-        raise FileNotFoundError(f"Model file not found: {model_path}")
 
-    # 設定ファイルの読み込み
-    with open(config_path, "r", encoding="utf-8") as f:
-        cfg = yaml.safe_load(f)
-    cfg = OmegaConf.create(cfg)
+# モデルファイルの配置ディレクトリ
+MODEL_DIR = Path("/workspaces/jp-natural-voice-app/models/style-bert-vits2-jp-extra/")
+MODEL_PATH = MODEL_DIR / "NotAnimeJPManySpeaker_e120_s22200.safetensors"
+CONFIG_PATH = MODEL_DIR / "config.json"
+STYLE_VECTORS_PATH = MODEL_DIR / "style_vectors.npy"
 
-    # モデルの読み込み（ここは公式実装に合わせてください）
-    # 例: model = YourStyleBertVITS2Model(cfg)
-    # model.load_state_dict(torch.load(model_path, map_location="cpu"))
-    # model.to(device).eval()
-    model = None  # ダミー
 
-    return model, cfg
-
-def synthesize_japanese_text(
-    model,
-    cfg,
-    text: str,
-    output_path: Path,
-    speaker_id: int = 0,
-    speed: float = 1.0,
-    device: str = "cuda",
-):
-    """
-    日本語テキストを音声に変換する（簡易版）
-    実際には公式リポジトリの inference 関数を参考に実装してください。
-    """
-    # ここに Style-Bert-VITS2 の推論コードを実装
-    # 例:
-    # with torch.no_grad():
-    #     audio = model.infer_tts(text, speaker_id=speaker_id, speed=speed)
-    #     torchaudio.save(output_path, audio.cpu(), cfg.sample_rate)
-
-    # ダミーの音声ファイルを出力（動作確認用）
-    sample_rate = 22050
-    t = np.linspace(0, 1.0, sample_rate)
-    audio = 0.1 * np.sin(2 * np.pi * 440 * t)  # 440 Hz のサイン波
-    audio_tensor = torch.from_numpy(audio).unsqueeze(0).float()
-    torchaudio.save(output_path, audio_tensor, sample_rate)
-
-    print(f"✅ Synthesized: {output_path}")
-
-def main():
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    print(f"Using device: {device}")
-
-    # モデルの読み込み
-    try:
-        model, cfg = load_model(CONFIG_PATH, MODEL_PATH, device=device)
-    except FileNotFoundError as e:
-        print(f"❌ Model not found: {e}")
-        print("Please download Style-Bert-VITS2 (JP-Extra) model files to:")
-        print(f"  {MODEL_DIR}")
+def check_model_files():
+    """必要なモデルファイルが存在するか確認する"""
+    required_files = [
+        MODEL_PATH,
+        CONFIG_PATH,
+        STYLE_VECTORS_PATH,
+    ]
+    missing = [f for f in required_files if not f.exists()]
+    if missing:
+        print("以下のファイルが見つかりません:", file=SAFE_STDOUT)
+        for f in missing:
+            print(f"  {f}", file=SAFE_STDOUT)
+        print("\nダウンロード先:", file=SAFE_STDOUT)
+        print("  config.json:", file=SAFE_STDOUT)
+        print("    https://huggingface.co/Mofa-Xingche/girl-style-bert-vits2-JPExtra-models/resolve/main/config.json?download=true", file=SAFE_STDOUT)
+        print("  NotAnimeJPManySpeaker_e120_s22200.safetensors:", file=SAFE_STDOUT)
+        print("    https://huggingface.co/Mofa-Xingche/girl-style-bert-vits2-JPExtra-models/resolve/main/NotAnimeJPManySpeaker_e120_s22200.safetensors?download=true", file=SAFE_STDOUT)
+        print("  style_vectors.npy:", file=SAFE_STDOUT)
+        print("    https://huggingface.co/Mofa-Xingche/girl-style-bert-vits2-JPExtra-models/resolve/main/style_vectors.npy?download=true", file=SAFE_STDOUT)
         sys.exit(1)
 
-    # 合成例
-    text = "こんにちは、これは Style-Bert-VITS2 JP-Extra を使った日本語音声合成のテストです。"
-    output_path = Path("output.wav")
-    synthesize_japanese_text(
-        model=model,
-        cfg=cfg,
-        text=text,
-        output_path=output_path,
-        speaker_id=0,
-        speed=1.0,
+
+def main():
+    print("Style-Bert-VITS2 model", file=SAFE_STDOUT)
+
+    # モデルファイルの存在確認
+    check_model_files()
+
+    # デバイス設定
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"Using device: {device}", file=SAFE_STDOUT)
+
+    # Style-Bert-VITS2 モデルのロード
+    print("Loading Style-Bert-VITS2 model...", file=SAFE_STDOUT)
+    from style_bert_vits2.models.infer import load_model
+    model, config = load_model(
+        model_path=str(MODEL_PATH),
+        config_path=str(CONFIG_PATH),
+        style_vec_path=str(STYLE_VECTORS_PATH),
         device=device,
     )
+    print("Model loaded.", file=SAFE_STDOUT)
+
+    # デフォルトパラメータ
+    speaker_id = 0
+    style = "Neutral"
+    style_weight = 0.7
+    sdp_ratio = 0.2
+    noise_scale = 0.6
+    noise_scale_w = 0.8
+    length_scale = 1.0
+    language = "JP"
+    auto_split = True
+    split_interval = 0.5
+    assist_text_weight = 1.0
+    assist_text = ""
+    use_assist_text = False
+
+    # テキスト入力
+    text = input("合成したい日本語テキストを入力してください: ").strip()
+    if not text:
+        print("テキストが入力されていません。", file=SAFE_STDOUT)
+        return
+
+    # 音声合成
+    print("音声合成中...", file=SAFE_STDOUT)
+    try:
+        wav = model.infer(
+            text=text,
+            language=language,
+            speaker_id=speaker_id,
+            reference_audio=None,
+            sdp_ratio=sdp_ratio,
+            noise=noise_scale,
+            noisew=noise_scale_w,
+            length=length_scale,
+            style=style,
+            style_weight=style_weight,
+            auto_split=auto_split,
+            split_interval=split_interval,
+            assist_text=assist_text if use_assist_text else None,
+            assist_text_weight=assist_text_weight,
+        )
+    except Exception as e:
+        print(f"音声合成に失敗しました: {e}", file=SAFE_STDOUT)
+        return
+
+    # WAV ファイル出力
+    output_path = Path("/workspace/output.wav")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    import soundfile as sf
+    sf.write(str(output_path), wav, config.data.sampling_rate)
+    print(f"音声ファイルを出力しました: {output_path}", file=SAFE_STDOUT)
+
 
 if __name__ == "__main__":
     main()

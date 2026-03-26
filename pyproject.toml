@@ -28,6 +28,7 @@ dependencies = [
     "fastapi",
     "uvicorn[standard]",
     "pydantic",
+    "style-bert-vits2",  # ← ここを追加
 ]
 
 [project.optional-dependencies]
