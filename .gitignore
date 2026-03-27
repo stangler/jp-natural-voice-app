@@ -28,6 +28,14 @@ output.wav
 *.ckpt
 *.zip
 *.tar.gz
+*.onnx
+*.bin
+*.spm.model
+bert/deberta-v3-large-onnx/spm.model
+bert/deberta-v3-large/spm.model
+pretrained/
+pretrained_jp_extra/
+configs/paths.yml
 
 # Logs
 *.log
