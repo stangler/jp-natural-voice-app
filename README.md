@@ -1,43 +1,34 @@
 # jp-natural-voice-app
 
-Style-Bert-VITS2 (JP-Extra) を使った日本語音声合成アプリ。
+Style-Bert-VITS2 JP-Extra を使った日本語音声合成・音声クローン環境。
 
 ## 特徴
 
 - Devcontainer で完結するローカル開発環境
-- CUDA 11.8 + GPU 対応
-- uv による依存管理
-- Style-Bert-VITS2 (JP-Extra) による高品質な日本語音声合成
+- Windows + WSL2 + Docker Desktop + NVIDIA GPU 対応
+- PyTorch 2.4 + CUDA 12.1 ベースのコンテナ
+- Gradio WebUI による Dataset / Train / Inference 操作
 
 ## セットアップ
+
+### 1. リポジトリのクローンと Devcontainer 起動
 
 1. リポジトリをクローン
 2. VS Code で `jp-natural-voice-app` を開く
 3. 「Reopen in Container」を実行
-4. Devcontainer 起動後、自動で `.devcontainer/post-create.sh` が実行される
 
-## モデルの準備
+### 2. Devcontainer 内での初期セットアップ（初回のみ）
 
-Style-Bert-VITS2 (JP-Extra) のモデルファイルを以下に配置してください。
-
-- `/workspaces/jp-natural-voice-app/models/style-bert-vits2-jp-extra/config.json`
-- `/workspaces/jp-natural-voice-app/models/style-bert-vits2-jp-extra/NotAnimeJPManySpeaker_e120_s22200.safetensors`
-- `/workspaces/jp-natural-voice-app/models/style-bert-vits2-jp-extra/style_vectors.npy`
-
-### ダウンロード元（Hugging Face）
-
-- `config.json`  
-  https://huggingface.co/Mofa-Xingche/girl-style-bert-vits2-JPExtra-models/resolve/main/config.json?download=true
-- `NotAnimeJPManySpeaker_e120_s22200.safetensors`  
-  https://huggingface.co/Mofa-Xingche/girl-style-bert-vits2-JPExtra-models/resolve/main/NotAnimeJPManySpeaker_e120_s22200.safetensors?download=true
-- `style_vectors.npy`  
-  https://huggingface.co/Mofa-Xingche/girl-style-bert-vits2-JPExtra-models/resolve/main/style_vectors.npy?download=true
-
-## 実行
+Devcontainer 起動後、ターミナルで以下を実行します。
 
 ```bash
-python main.py
-```
+# ffmpeg のインストール
+apt-get update
+apt-get install -y ffmpeg
 
-実行すると、日本語テキストの入力が求められます。  
-合成された音声は `/workspace/output.wav` に出力されます。
+# pip パッケージのインストール
+pip install --upgrade pip
+pip install torchaudio librosa soundfile transformers accelerate pyyaml gradio numpy scipy jaconv fugashi unidic-lite ipadic openai-whisper loguru onnxruntime pyworld num2words faster-whisper soxr
+
+# Style-Bert-VITS2 の初期化
+python initialize.py
