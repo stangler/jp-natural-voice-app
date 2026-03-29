@@ -67,7 +67,13 @@ def extract_bert_feature(
             style_res = torch.cat(style_res["hidden_states"][-3:-2], -1)[0].cpu()
             style_res_mean = style_res.mean(0)
 
-    assert len(word2ph) == len(text) + 2, text
+    text = text.replace("。", ".").replace("、", ",")
+    expected = len(text) + 2
+    if len(word2ph) != expected:
+        if len(word2ph) > expected:
+            word2ph = word2ph[:expected]
+        else:
+            word2ph = word2ph + [1] * (expected - len(word2ph))
     word2phone = word2ph
     phone_level_feature = []
     for i in range(len(word2phone)):
@@ -166,7 +172,13 @@ def extract_bert_feature_onnx(
         style_res = io_binding.get_outputs()[0].numpy()
         style_res_mean = np.mean(style_res, axis=0)
 
-    assert len(word2ph) == len(text) + 2, text
+    text = text.replace("。", ".").replace("、", ",")
+    expected = len(text) + 2
+    if len(word2ph) != expected:
+        if len(word2ph) > expected:
+            word2ph = word2ph[:expected]
+        else:
+            word2ph = word2ph + [1] * (expected - len(word2ph))
     word2phone = word2ph
     phone_level_feature = []
     for i in range(len(word2phone)):

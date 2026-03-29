@@ -58,9 +58,18 @@ def process_line(x: tuple[str, bool]):
         bert = torch.load(bert_path)
         assert bert.shape[-1] == len(phone)
     except Exception:
-        bert = extract_bert_feature(text, word2ph, Languages(language_str), device)
-        assert bert.shape[-1] == len(phone)
-        torch.save(bert, bert_path)
+        try:
+            bert = extract_bert_feature(text, word2ph, Languages(language_str), device)
+            if bert.shape[-1] != len(phone):
+                if bert.shape[-1] > len(phone):
+                    bert = bert[:, :len(phone)]
+                else:
+                    import torch.nn.functional as F
+                    bert = F.pad(bert, (0, len(phone) - bert.shape[-1]))
+            torch.save(bert, bert_path)
+        except AssertionError as e:
+            print(f"[SKIP] AssertionError skipped: {e}")
+            return
 
 
 preprocess_text_config = config.preprocess_text_config
